@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PMHNP-BC Study Tool</title>
+  <style>
+    /* Global Styles */
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .question {
+      margin-bottom: 40px;
+      padding: 20px;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      position: relative;
+    }
+    .question-text {
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    .options {
+      margin-left: 20px;
+    }
+    .option {
+      margin-bottom: 10px;
+    }
+    .option label {
+      cursor: pointer;
+      display: inline-block;
+      padding: 5px;
+      width: 90%;
+    }
+    .option:hover {
+      background-color: #e8f4fc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin: 10px 5px 10px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    button:focus {
+      outline: 3px solid #93c5fd;
+    }
+    .suggestions, .answer {
+      display: none;
+      margin-top: 15px;
+      padding: 15px;
+      background-color: #e8f4fc;
+      border-left: 5px solid #3498db;
+      border-radius: 5px;
+    }
+    .suggestions h4, .answer h4 {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+    .correct-answer {
+      font-weight: bold;
+      color: #27ae60;
+    }
+    .references {
+      font-size: 0.9em;
+      margin-top: 10px;
+    }
+    .references a {
+      color: #3498db;
+      text-decoration: none;
+    }
+    #results {
+      display: none;
+      margin-top: 30px;
+      padding: 20px;
+      text-align: center;
+      background-color: #f0f7fc;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    .score {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    /* Progress and Controls */
+    .progress-indicator {
+      text-align: center;
+      color: #7f8c8d;
+      margin-bottom: 20px;
+      font-size: 1.1em;
+    }
+    .progress-steps {
+      display: flex;
+      justify-content: space-between;
+      margin: 20px 0;
+      padding: 0 10px;
+    }
+    .step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+    }
+    .step-bubble {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: #e1e1e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      color: #333;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    .step.active .step-bubble {
+      background-color: #3498db;
+      color: white;
+    }
+    .step.completed .step-bubble {
+      background-color: #27ae60;
+      color: white;
+    }
+    .step-connector {
+      position: absolute;
+      top: 15px;
+      height: 2px;
+      background-color: #e1e1e1;
+      width: 100%;
+      left: 50%;
+      z-index: -1;
+    }
+    .step:last-child .step-connector {
+      display: none;
+    }
+    .controls {
+      margin: 15px 0;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .nav-btn {
+      background-color: #2c3e50;
+      transition: background-color 0.3s;
+    }
+    .nav-btn:hover {
+      background-color: #1a252f;
+    }
+    .nav-btn:disabled {
+      background-color: #95a5a6;
+      cursor: not-allowed;
+    }
+    #randomize-btn, #restart-btn {
+      background-color: #8e44ad;
+    }
+    #randomize-btn:hover, #restart-btn:hover {
+      background-color: #703688;
+    }
+    #timer-toggle {
+      background-color: #e67e22;
+    }
+    #timer-toggle:hover {
+      background-color: #d35400;
+    }
+    #save-progress {
+      background-color: #27ae60;
+    }
+    #save-progress:hover {
+      background-color: #219955;
+    }
+    #print-results {
+      background-color: #7f8c8d;
+    }
+    #print-results:hover {
+      background-color: #6c7a7d;
+    }
+    .feedback {
+      display: none;
+      margin-top: 5px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+    .correct {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .incorrect {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .change-tracker {
+      font-size: 0.8em;
+      color: #7f8c8d;
+      margin-top: 5px;
+      display: none;
+    }
+    .timer-container {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 1.2em;
+      color: #2c3e50;
+    }
+    .timer {
+      font-weight: bold;
+      margin-left: 5px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px 15px;
+      }
+      .progress-steps {
+        padding: 0;
+      }
+      .controls {
+        flex-wrap: wrap;
+      }
+      .controls button {
+        margin-bottom: 10px;
+        flex-basis: 48%;
+      }
+    }
+    @media print {
+      body {
+        background-color: white;
+      }
+      .container {
+        box-shadow: none;
+        padding: 0;
+      }
+      button, .controls, #timer-container {
+        display: none !important;
+      }
+      .question {
+        page-break-inside: avoid;
+      }
+      .answer, .suggestions {
+        display: block !important;
+      }
+      #results {
+        display: block !important;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>PMHNP-BC Study Tool</h1>
+
+  <!-- Timer Section -->
+  <div class="timer-container" id="timer-container">
+    <span>Time elapsed:</span>
+    <span class="timer" id="timer">00:00</span>
+    <button id="timer-toggle">Pause Timer</button>
+  </div>
+
+  <!-- Progress Indicator -->
+  <div class="progress-indicator">
+    Question <span id="current-question">1</span> of 10
+  </div>
+  <div class="progress-steps" id="progress-steps">
+    <!-- Steps (bubbles) dynamically populated in JS -->
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button id="prev-btn" class="nav-btn" disabled>Previous</button>
+    <button id="randomize-btn">Randomize Questions</button>
+    <button id="save-progress">Save Progress</button>
+    <button id="next-btn" class="nav-btn">Next</button>
+  </div>
+
+  <!-- QUESTION 1 -->
+  <div class="question" id="q1">
+    <div class="question-text">
+      Question 1: A 40-year-old patient presents with a 2-month history of depressed mood, anhedonia, insomnia, feelings of worthlessness, and difficulty concentrating. Denies any manic or hypomanic episodes.
+    </div>
+    <div class="options">
+      <div class="option">
+        <input type="radio" id="q1a" name="q1" value="A">
+        <label for="q1a">(A) Major Depressive Disorder (MDD)</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q1b" name="q1" value="B">
+        <label for="q1b">(B) Dysthymia (Persistent Depressive Disorder)</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q1c" name="q1" value="C">
+        <label for="q1c">(C) Bipolar I Disorder</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q1d" name="q1" value="D">
+        <label for="q1d">(D) Generalized Anxiety Disorder</label>
+      </div>
+    </div>
+    <div class="change-tracker" id="change-tracker1">Changes: 0</div>
+    <div class="feedback" id="feedback1"></div>
+    <button onclick="showSuggestions('1')">Suggestions</button>
+    <button onclick="showAnswer('1')">Show Answer</button>
+
+    <div class="suggestions" id="suggestions1">
+      <h4>Key Points to Consider:</h4>
+      <ul>
+        <li>Consider the duration of symptoms (2 months)</li>
+        <li>Note depressed mood and anhedonia</li>
+        <li>No history of mania/hypomania is reported</li>
+      </ul>
+    </div>
+    <div class="answer" id="answer1">
+      <h4 class="correct-answer">The correct answer is A: Major Depressive Disorder (MDD)</h4>
+      <p><strong>Explanation:</strong> This presentation is consistent with MDD due to the duration (≥2 weeks), depressed mood, anhedonia, and no manic/hypomanic episodes.</p>
+      <p><strong>Key Points:</strong></p>
+      <ul>
+        <li>Always evaluate for suicidality in patients with depressive symptoms</li>
+        <li>Consider both psychotherapy and SSRIs as first-line treatments</li>
+        <li>Screen for bipolar disorder before starting antidepressants</li>
+      </ul>
+      <div class="references">
+        <p><strong>References:</strong></p>
+        <ul>
+          <li><a href="https://www.nimh.nih.gov" target="_blank">https://www.nimh.nih.gov</a></li>
+          <li><a href="https://www.psychiatry.org" target="_blank">https://www.psychiatry.org</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTION 2 -->
+  <div class="question" id="q2">
+    <div class="question-text">
+      Question 2: A 25-year-old patient has excessive anxiety and worry about multiple events, difficulty controlling worry, restlessness, and disturbed sleep for at least 6 months.
+    </div>
+    <div class="options">
+      <div class="option">
+        <input type="radio" id="q2a" name="q2" value="A">
+        <label for="q2a">(A) Generalized Anxiety Disorder (GAD)</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q2b" name="q2" value="B">
+        <label for="q2b">(B) Panic Disorder</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q2c" name="q2" value="C">
+        <label for="q2c">(C) Social Anxiety Disorder</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q2d" name="q2" value="D">
+        <label for="q2d">(D) Specific Phobia</label>
+      </div>
+    </div>
+    <div class="change-tracker" id="change-tracker2">Changes: 0</div>
+    <div class="feedback" id="feedback2"></div>
+    <button onclick="showSuggestions('2')">Suggestions</button>
+    <button onclick="showAnswer('2')">Show Answer</button>
+
+    <div class="suggestions" id="suggestions2">
+      <h4>Key Points to Consider:</h4>
+      <ul>
+        <li>Symptoms must persist for at least 6 months</li>
+        <li>Worry encompasses multiple situations (not just one)</li>
+        <li>Physical symptoms: restlessness, sleep disturbance</li>
+      </ul>
+    </div>
+    <div class="answer" id="answer2">
+      <h4 class="correct-answer">The correct answer is A: Generalized Anxiety Disorder (GAD)</h4>
+      <p><strong>Explanation:</strong> GAD criteria include pervasive worry about various topics lasting ≥6 months, with difficulty controlling worry and physical symptoms.</p>
+      <p><strong>Key Points:</strong></p>
+      <ul>
+        <li>SSRIs/SNRIs are first-line pharmacological treatment</li>
+        <li>Cognitive-behavioral therapy can be very effective</li>
+        <li>Relaxation and mindfulness techniques help manage symptoms</li>
+      </ul>
+      <div class="references">
+        <p><strong>References:</strong></p>
+        <ul>
+          <li><a href="https://www.psychologytoday.com" target="_blank">https://www.psychologytoday.com</a></li>
+          <li><a href="https://www.psychiatry.org" target="_blank">https://www.psychiatry.org</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTION 3 -->
+  <div class="question" id="q3">
+    <div class="question-text">
+      Question 3: A 30-year-old veteran reports recurrent nightmares, flashbacks, avoidance behaviors, hypervigilance, and exaggerated startle response for several months after a combat-related event.
+    </div>
+    <div class="options">
+      <div class="option">
+        <input type="radio" id="q3a" name="q3" value="A">
+        <label for="q3a">(A) Acute Stress Disorder</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q3b" name="q3" value="B">
+        <label for="q3b">(B) Post-Traumatic Stress Disorder (PTSD)</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q3c" name="q3" value="C">
+        <label for="q3c">(C) Adjustment Disorder</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q3d" name="q3" value="D">
+        <label for="q3d">(D) Generalized Anxiety Disorder</label>
+      </div>
+    </div>
+    <div class="change-tracker" id="change-tracker3">Changes: 0</div>
+    <div class="feedback" id="feedback3"></div>
+    <button onclick="showSuggestions('3')">Suggestions</button>
+    <button onclick="showAnswer('3')">Show Answer</button>
+
+    <div class="suggestions" id="suggestions3">
+      <h4>Key Points to Consider:</h4>
+      <ul>
+        <li>Duration longer than 1 month suggests PTSD over Acute Stress Disorder</li>
+        <li>Symptoms include re-experiencing, avoidance, and hyperarousal</li>
+        <li>Linked directly to a traumatic event (combat)</li>
+      </ul>
+    </div>
+    <div class="answer" id="answer3">
+      <h4 class="correct-answer">The correct answer is B: Post-Traumatic Stress Disorder (PTSD)</h4>
+      <p><strong>Explanation:</strong> Symptoms persisting for several months after trauma (nightmares, flashbacks, avoidance, hyperarousal) align with PTSD.</p>
+      <p><strong>Key Points:</strong></p>
+      <ul>
+        <li>Trauma-focused therapies (CPT, PE, EMDR) are first-line</li>
+        <li>SSRIs (sertraline, paroxetine) can be used</li>
+        <li>Prazosin may help reduce nightmares</li>
+      </ul>
+      <div class="references">
+        <p><strong>References:</strong></p>
+        <ul>
+          <li><a href="https://www.ptsd.va.gov" target="_blank">https://www.ptsd.va.gov</a></li>
+          <li><a href="https://www.apa.org" target="_blank">https://www.apa.org</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTION 4 -->
+  <div class="question" id="q4">
+    <div class="question-text">
+      Question 4: A 32-year-old with a week-long episode of elevated mood, increased goal-directed behavior, racing thoughts, and decreased need for sleep, without substance use.
+    </div>
+    <div class="options">
+      <div class="option">
+        <input type="radio" id="q4a" name="q4" value="A">
+        <label for="q4a">(A) Bipolar I Disorder (Manic Episode)</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q4b" name="q4" value="B">
+        <label for="q4b">(B) Bipolar II Disorder (Hypomanic Episode)</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q4c" name="q4" value="C">
+        <label for="q4c">(C) Schizoaffective Disorder</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q4d" name="q4" value="D">
+        <label for="q4d">(D) Major Depressive Disorder</label>
+      </div>
+    </div>
+    <div class="change-tracker" id="change-tracker4">Changes: 0</div>
+    <div class="feedback" id="feedback4"></div>
+    <button onclick="showSuggestions('4')">Suggestions</button>
+    <button onclick="showAnswer('4')">Show Answer</button>
+
+    <div class="suggestions" id="suggestions4">
+      <h4>Key Points to Consider:</h4>
+      <ul>
+        <li>One full week of symptoms suggests mania, not hypomania</li>
+        <li>Check for any substance-induced causes (here it's ruled out)</li>
+        <li>Look at severity of functional impairment</li>
+      </ul>
+    </div>
+    <div class="answer" id="answer4">
+      <h4 class="correct-answer">The correct answer is A: Bipolar I Disorder (Manic Episode)</h4>
+      <p><strong>Explanation:</strong> A manic episode lasts ≥1 week (or any duration if severe enough for hospitalization) without substance influence, meeting Bipolar I criteria.</p>
+      <p><strong>Key Points:</strong></p>
+      <ul>
+        <li>Mood stabilizers (lithium, valproate) or atypical antipsychotics are first-line</li>
+        <li>Monitor labs (e.g., lithium levels, thyroid, renal function)</li>
+        <li>High risk of suicidality; ensure safety measures</li>
+      </ul>
+      <div class="references">
+        <p><strong>References:</strong></p>
+        <ul>
+          <li><a href="https://www.nami.org" target="_blank">https://www.nami.org</a></li>
+          <li><a href="https://www.psychiatry.org" target="_blank">https://www.psychiatry.org</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTION 5 -->
+  <div class="question" id="q5">
+    <div class="question-text">
+      Question 5: A 28-year-old showing disorganized speech, flat affect, auditory hallucinations, and social withdrawal for 3 months.
+    </div>
+    <div class="options">
+      <div class="option">
+        <input type="radio" id="q5a" name="q5" value="A">
+        <label for="q5a">(A) Schizophrenia (≥6 months)</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q5b" name="q5" value="B">
+        <label for="q5b">(B) Schizophreniform Disorder (1–6 months)</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q5c" name="q5" value="C">
+        <label for="q5c">(C) Brief Psychotic Disorder (&lt;1 month)</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q5d" name="q5" value="D">
+        <label for="q5d">(D) Schizoaffective Disorder</label>
+      </div>
+    </div>
+    <div class="change-tracker" id="change-tracker5">Changes: 0</div>
+    <div class="feedback" id="feedback5"></div>
+    <button onclick="showSuggestions('5')">Suggestions</button>
+    <button onclick="showAnswer('5')">Show Answer</button>
+
+    <div class="suggestions" id="suggestions5">
+      <h4>Key Points to Consider:</h4>
+      <ul>
+        <li>Duration of 3 months is critical for distinguishing from Schizophrenia</li>
+        <li>Symptoms include psychosis (hallucinations, disorganized speech)</li>
+        <li>Schizoaffective also requires mood disorder symptoms</li>
+      </ul>
+    </div>
+    <div class="answer" id="answer5">
+      <h4 class="correct-answer">The correct answer is B: Schizophreniform Disorder (1–6 months)</h4>
+      <p><strong>Explanation:</strong> Symptoms resembling schizophrenia but duration is only 3 months, fitting Schizophreniform (1-6 months).</p>
+      <p><strong>Key Points:</strong></p>
+      <ul>
+        <li>Atypical antipsychotics are first-line treatment</li>
+        <li>Monitor metabolic parameters (weight, glucose, lipids)</li>
+        <li>Many patients with Schizophreniform progress to Schizophrenia if symptoms persist beyond 6 months</li>
+      </ul>
+      <div class="references">
+        <p><strong>References:</strong></p>
+        <ul>
+          <li><a href="https://www.schizophrenia.com" target="_blank">https://www.schizophrenia.com</a></li>
+          <li><a href="https://www.nimh.nih.gov" target="_blank">https://www.nimh.nih.gov</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTION 6 -->
+  <div class="question" id="q6">
+    <div class="question-text">
+      Question 6: A 34-year-old with intrusive thoughts of contamination and repetitive handwashing rituals consuming hours daily.
+    </div>
+    <div class="options">
+      <div class="option">
+        <input type="radio" id="q6a" name="q6" value="A">
+        <label for="q6a">(A) Generalized Anxiety Disorder</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q6b" name="q6" value="B">
+        <label for="q6b">(B) Obsessive-Compulsive Disorder (OCD)</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q6c" name="q6" value="C">
+        <label for="q6c">(C) Panic Disorder</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q6d" name="q6" value="D">
+        <label for="q6d">(D) Specific Phobia</label>
+      </div>
+    </div>
+    <div class="change-tracker" id="change-tracker6">Changes: 0</div>
+    <div class="feedback" id="feedback6"></div>
+    <button onclick="showSuggestions('6')">Suggestions</button>
+    <button onclick="showAnswer('6')">Show Answer</button>
+
+    <div class="suggestions" id="suggestions6">
+      <h4>Key Points to Consider:</h4>
+      <ul>
+        <li>Intrusive thoughts (obsessions) and repetitive rituals (compulsions)</li>
+        <li>Consumes hours daily, causing significant distress/impairment</li>
+        <li>Not limited to general worry or a single phobic stimulus</li>
+      </ul>
+    </div>
+    <div class="answer" id="answer6">
+      <h4 class="correct-answer">The correct answer is B: Obsessive-Compulsive Disorder (OCD)</h4>
+      <p>
+        <strong>Explanation:</strong> OCD is characterized by obsessions (intrusive thoughts) and compulsions (repetitive behaviors) that significantly interfere with daily life.
+      </p>
+      <p><strong>Key Points:</strong></p>
+      <ul>
+        <li>High-dose SSRIs (like fluoxetine) are often used</li>
+        <li>Exposure and Response Prevention therapy is highly effective</li>
+        <li>Assess for comorbid anxiety or depression</li>
+      </ul>
+      <div class="references">
+        <p><strong>References:</strong></p>
+        <ul>
+          <li><a href="https://iocdf.org" target="_blank">https://iocdf.org</a></li>
+          <li><a href="https://www.psychiatry.org" target="_blank">https://www.psychiatry.org</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTION 7 -->
+  <div class="question" id="q7">
+    <div class="question-text">
+      Question 7: A 22-year-old college student struggles with concentration, restlessness, impulsivity, and difficulty completing tasks, affecting academic performance.
+    </div>
+    <div class="options">
+      <div class="option">
+        <input type="radio" id="q7a" name="q7" value="A">
+        <label for="q7a">(A) Attention-Deficit/Hyperactivity Disorder (ADHD)</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q7b" name="q7" value="B">
+        <label for="q7b">(B) Social Anxiety Disorder</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q7c" name="q7" value="C">
+        <label for="q7c">(C) Dysthymia</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q7d" name="q7" value="D">
+        <label for="q7d">(D) Panic Disorder</label>
+      </div>
+    </div>
+    <div class="change-tracker" id="change-tracker7">Changes: 0</div>
+    <div class="feedback" id="feedback7"></div>
+    <button onclick="showSuggestions('7')">Suggestions</button>
+    <button onclick="showAnswer('7')">Show Answer</button>
+
+    <div class="suggestions" id="suggestions7">
+      <h4>Key Points to Consider:</h4>
+      <ul>
+        <li>Symptoms of inattention, impulsivity, restlessness</li>
+        <li>Age of onset and functional impairment (academic performance)</li>
+        <li>Rule out anxiety, depression, or learning disorders</li>
+      </ul>
+    </div>
+    <div class="answer" id="answer7">
+      <h4 class="correct-answer">The correct answer is A: Attention-Deficit/Hyperactivity Disorder (ADHD)</h4>
+      <p><strong>Explanation:</strong> ADHD presents with symptoms of inattention, impulsivity, and restlessness that interfere with functioning.</p>
+      <p><strong>Key Points:</strong></p>
+      <ul>
+        <li>Stimulant medications (methylphenidate, amphetamine salts) are first-line</li>
+        <li>Behavioral strategies and time management can help</li>
+        <li>Screen for comorbid conditions (anxiety, mood disorders)</li>
+      </ul>
+      <div class="references">
+        <p><strong>References:</strong></p>
+        <ul>
+          <li><a href="https://www.chadd.org" target="_blank">https://www.chadd.org</a></li>
+          <li><a href="https://www.psychiatry.org" target="_blank">https://www.psychiatry.org</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTION 8 -->
+  <div class="question" id="q8">
+    <div class="question-text">
+      Question 8: A 50-year-old with heavy alcohol use reports cravings, loss of control, tolerance, withdrawal symptoms, and potential liver impairment.
+    </div>
+    <div class="options">
+      <div class="option">
+        <input type="radio" id="q8a" name="q8" value="A">
+        <label for="q8a">(A) Alcohol Use Disorder</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q8b" name="q8" value="B">
+        <label for="q8b">(B) Schizoaffective Disorder</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q8c" name="q8" value="C">
+        <label for="q8c">(C) Bipolar Disorder</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q8d" name="q8" value="D">
+        <label for="q8d">(D) Generalized Anxiety Disorder</label>
+      </div>
+    </div>
+    <div class="change-tracker" id="change-tracker8">Changes: 0</div>
+    <div class="feedback" id="feedback8"></div>
+    <button onclick="showSuggestions('8')">Suggestions</button>
+    <button onclick="showAnswer('8')">Show Answer</button>
+
+    <div class="suggestions" id="suggestions8">
+      <h4>Key Points to Consider:</h4>
+      <ul>
+        <li>Assess the full spectrum of use, cravings, tolerance, withdrawal</li>
+        <li>Physical damage (liver impairment) strongly suggests chronic use</li>
+        <li>Look for patterns of continued use despite harm</li>
+      </ul>
+    </div>
+    <div class="answer" id="answer8">
+      <h4 class="correct-answer">The correct answer is A: Alcohol Use Disorder</h4>
+      <p><strong>Explanation:</strong> Heavy alcohol use with cravings, tolerance, withdrawal, and liver impairment fits Alcohol Use Disorder.</p>
+      <p><strong>Key Points:</strong></p>
+      <ul>
+        <li>Naltrexone or acamprosate may help reduce cravings</li>
+        <li>Monitor liver function tests (LFTs), CBC, electrolytes</li>
+        <li>Consider benzodiazepines for acute withdrawal management</li>
+      </ul>
+      <div class="references">
+        <p><strong>References:</strong></p>
+        <ul>
+          <li><a href="https://www.samhsa.gov" target="_blank">https://www.samhsa.gov</a></li>
+          <li><a href="https://www.niaaa.nih.gov" target="_blank">https://www.niaaa.nih.gov</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTION 9 -->
+  <div class="question" id="q9">
+    <div class="question-text">
+      Question 9: A 70-year-old with gradual memory decline, confusion, and difficulty performing daily tasks over the past year, without acute changes.
+    </div>
+    <div class="options">
+      <div class="option">
+        <input type="radio" id="q9a" name="q9" value="A">
+        <label for="q9a">(A) Delirium</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q9b" name="q9" value="B">
+        <label for="q9b">(B) Mild Cognitive Impairment</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q9c" name="q9" value="C">
+        <label for="q9c">(C) Alzheimer’s Disease (or other Dementia)</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q9d" name="q9" value="D">
+        <label for="q9d">(D) Vascular Dementia</label>
+      </div>
+    </div>
+    <div class="change-tracker" id="change-tracker9">Changes: 0</div>
+    <div class="feedback" id="feedback9"></div>
+    <button onclick="showSuggestions('9')">Suggestions</button>
+    <button onclick="showAnswer('9')">Show Answer</button>
+
+    <div class="suggestions" id="suggestions9">
+      <h4>Key Points to Consider:</h4>
+      <ul>
+        <li>Slow onset, progressive decline suggests dementia</li>
+        <li>Delirium is acute; MCI is milder with less functional impairment</li>
+        <li>Differentiate Alzheimer’s vs. Vascular (stepwise decline) vs. other etiologies</li>
+      </ul>
+    </div>
+    <div class="answer" id="answer9">
+      <h4 class="correct-answer">The correct answer is C: Alzheimer’s Disease (or other Dementia)</h4>
+      <p><strong>Explanation:</strong> Gradual and progressive cognitive decline over a year with no acute fluctuation is typical of dementia such as Alzheimer’s.</p>
+      <p><strong>Key Points:</strong></p>
+      <ul>
+        <li>Cholinesterase inhibitors (donepezil) or memantine may help</li>
+        <li>Supportive care, safety measures, caregiver education</li>
+        <li>Check labs for reversible causes (B12, thyroid), but presentation is classic for dementia</li>
+      </ul>
+      <div class="references">
+        <p><strong>References:</strong></p>
+        <ul>
+          <li><a href="https://www.alz.org" target="_blank">https://www.alz.org</a></li>
+          <li><a href="https://www.nia.nih.gov" target="_blank">https://www.nia.nih.gov</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTION 10 -->
+  <div class="question" id="q10">
+    <div class="question-text">
+      Question 10: A 27-year-old exhibits unstable relationships, fear of abandonment, identity disturbance, impulsive spending, and recurrent suicidal gestures.
+    </div>
+    <div class="options">
+      <div class="option">
+        <input type="radio" id="q10a" name="q10" value="A">
+        <label for="q10a">(A) Borderline Personality Disorder (BPD)</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q10b" name="q10" value="B">
+        <label for="q10b">(B) Bipolar I Disorder</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q10c" name="q10" value="C">
+        <label for="q10c">(C) Major Depressive Disorder</label>
+      </div>
+      <div class="option">
+        <input type="radio" id="q10d" name="q10" value="D">
+        <label for="q10d">(D) Narcissistic Personality Disorder</label>
+      </div>
+    </div>
+    <div class="change-tracker" id="change-tracker10">Changes: 0</div>
+    <div class="feedback" id="feedback10"></div>
+    <button onclick="showSuggestions('10')">Suggestions</button>
+    <button onclick="showAnswer('10')">Show Answer</button>
+
+    <div class="suggestions" id="suggestions10">
+      <h4>Key Points to Consider:</h4>
+      <ul>
+        <li>Pattern of unstable relationships, impulsivity, self-harm gestures</li>
+        <li>Fear of abandonment is hallmark</li>
+        <li>Differentiate from mood disorders and other personality disorders</li>
+      </ul>
+    </div>
+    <div class="answer" id="answer10">
+      <h4 class="correct-answer">The correct answer is A: Borderline Personality Disorder (BPD)</h4>
+      <p><strong>Explanation:</strong> BPD is characterized by pervasive instability in relationships, self-image, and affect, with marked impulsivity and recurrent suicidality.</p>
+      <p><strong>Key Points:</strong></p>
+      <ul>
+        <li>Dialectical Behavior Therapy (DBT) is highly recommended</li>
+        <li>Low-dose atypical antipsychotics or mood stabilizers can help with affective instability</li>
+        <li>Long-term therapeutic alliance is crucial</li>
+      </ul>
+      <div class="references">
+        <p><strong>References:</strong></p>
+        <ul>
+          <li><a href="https://www.borderlinepersonalitydisorder.org" target="_blank">https://www.borderlinepersonalitydisorder.org</a></li>
+          <li><a href="https://www.psychiatry.org" target="_blank">https://www.psychiatry.org</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS SECTION -->
+  <div id="results">
+    <h2>Your Results</h2>
+    <div class="score"></div>
+    <p class="score-details"></p>
+  </div>
+
+</div>
+
+<script>
+/* ===============================
+   JavaScript Quiz Functionality
+   =============================== */
+
+// Keep track of total questions
+const totalQuestions = 10;
+let currentQuestionIndex = 1;
+let timerInterval = null;
+let isTimerPaused = false;
+let secondsElapsed = 0;
+
+// Initialize on page load
+window.onload = function() {
+  setupProgressSteps();
+  updateQuestionVisibility();
+  startTimer();
+  trackRadioChanges();
+};
+
+// --- TIMER LOGIC ---
+function startTimer() {
+  timerInterval = setInterval(() => {
+    if (!isTimerPaused) {
+      secondsElapsed++;
+      document.getElementById("timer").textContent = formatTime(secondsElapsed);
+    }
+  }, 1000);
+}
+
+function formatTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+}
+
+document.getElementById("timer-toggle").addEventListener("click", function() {
+  isTimerPaused = !isTimerPaused;
+  this.textContent = isTimerPaused ? "Resume Timer" : "Pause Timer";
+});
+
+// --- PROGRESS STEPS ---
+function setupProgressSteps() {
+  const stepsContainer = document.getElementById("progress-steps");
+  for (let i = 1; i <= totalQuestions; i++) {
+    const stepDiv = document.createElement("div");
+    stepDiv.classList.add("step");
+    stepDiv.innerHTML = `
+      <div class="step-bubble">${i}</div>
+      <div class="step-connector"></div>
+    `;
+    stepsContainer.appendChild(stepDiv);
+  }
+  updateProgressSteps();
+}
+
+function updateProgressSteps() {
+  const steps = document.querySelectorAll(".step");
+  steps.forEach((step, index) => {
+    step.classList.remove("active", "completed");
+    if (index < currentQuestionIndex - 1) {
+      step.classList.add("completed");
+    } else if (index === currentQuestionIndex - 1) {
+      step.classList.add("active");
+    }
+  });
+}
+
+// --- NAVIGATION ---
+document.getElementById("prev-btn").addEventListener("click", () => {
+  if (currentQuestionIndex > 1) {
+    currentQuestionIndex--;
+    updateQuestionVisibility();
+    updateProgressSteps();
+  }
+});
+
+document.getElementById("next-btn").addEventListener("click", () => {
+  if (currentQuestionIndex < totalQuestions) {
+    currentQuestionIndex++;
+    updateQuestionVisibility();
+    updateProgressSteps();
+  } else {
+    // If on last question, let's trigger quiz grading?
+    gradeQuiz();
+  }
+});
+
+function updateQuestionVisibility() {
+  // Hide all questions
+  for (let i = 1; i <= totalQuestions; i++) {
+    document.getElementById("q" + i).style.display = "none";
+  }
+  // Show only current question
+  document.getElementById("q" + currentQuestionIndex).style.display = "block";
+
+  // Update progress indicator text
+  document.getElementById("current-question").textContent = currentQuestionIndex;
+
+  // Enable/disable navigation buttons
+  document.getElementById("prev-btn").disabled = currentQuestionIndex === 1;
+  document.getElementById("next-btn").disabled = currentQuestionIndex === totalQuestions;
+
+  // If we're on the last question, change the Next button text
+  if (currentQuestionIndex === totalQuestions) {
+    document.getElementById("next-btn").textContent = "Grade Quiz";
+  } else {
+    document.getElementById("next-btn").textContent = "Next";
+  }
+}
+
+// --- SUGGESTIONS & ANSWERS ---
+function showSuggestions(num) {
+  const sug = document.getElementById("suggestions" + num);
+  if (sug.style.display === "block") {
+    sug.style.display = "none";
+  } else {
+    sug.style.display = "block";
+  }
+}
+
+function showAnswer(num) {
+  const ans = document.getElementById("answer" + num);
+  if (ans.style.display === "block") {
+    ans.style.display = "none";
+  } else {
+    ans.style.display = "block";
+  }
+}
+
+// --- TRACK RADIO CHANGES ---
+function trackRadioChanges() {
+  for (let i = 1; i <= totalQuestions; i++) {
+    const radios = document.getElementsByName("q" + i);
+    radios.forEach(radio => {
+      radio.addEventListener("change", function() {
+        const tracker = document.getElementById("change-tracker" + i);
+        // Increase the count of changes
+        const currentCount = parseInt(tracker.textContent.replace("Changes: ", "")) || 0;
+        tracker.textContent = "Changes: " + (currentCount + 1);
+        tracker.style.display = "block";
+      });
+    });
+  }
+}
+
+// --- RANDOMIZE QUESTIONS (placeholder function) ---
+document.getElementById("randomize-btn").addEventListener("click", () => {
+  alert("Randomize feature is not fully implemented in this example.");
+});
+
+// --- SAVE PROGRESS (placeholder function) ---
+document.getElementById("save-progress").addEventListener("click", () => {
+  alert("Save progress feature is not fully implemented in this example.");
+});
+
+// --- GRADE QUIZ ---
+function gradeQuiz() {
+  // Correct answers for each question
+  const correctAnswers = {
+    q1: "A",
+    q2: "A",
+    q3: "B",
+    q4: "A",
+    q5: "B",
+    q6: "B",
+    q7: "A",
+    q8: "A",
+    q9: "C",
+    q10: "A"
+  };
+
+  let score = 0;
+  // Check user selections
+  for (let i = 1; i <= totalQuestions; i++) {
+    const userSelection = document.querySelector(`input[name="q${i}"]:checked`);
+    const feedback = document.getElementById("feedback" + i);
+    if (userSelection) {
+      if (userSelection.value === correctAnswers["q" + i]) {
+        score++;
+        feedback.textContent = "Correct!";
+        feedback.className = "feedback correct";
+      } else {
+        feedback.textContent = "Incorrect.";
+        feedback.className = "feedback incorrect";
+      }
+    } else {
+      feedback.textContent = "No answer selected.";
+      feedback.className = "feedback incorrect";
+    }
+    feedback.style.display = "block";
+  }
+
+  // Display results
+  document.getElementById("results").style.display = "block";
+  const finalScore = document.querySelector(".score");
+  const scoreDetails = document.querySelector(".score-details");
+
+  // Convert raw score to 1-10 scale: if user answers all correct, that's 10
+  // (Already totalQuestions=10, so raw score is effectively 1:1 to the scale)
+  // But you can adjust if you want partial credit, etc.
+  finalScore.textContent = `Score: ${score} / 10`;
+  scoreDetails.textContent = (score === 10)
+    ? "Excellent work! You got a perfect score."
+    : `You answered ${score} correctly out of 10.`;
+
+  // Scroll to results
+  document.getElementById("results").scrollIntoView({ behavior: "smooth" });
+}
+
+</script>
+</body>
+</html>
